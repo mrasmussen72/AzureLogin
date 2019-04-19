@@ -17,7 +17,9 @@ function AzureLogin
         [Parameter(Mandatory=$false)]
         [string] $LoginName,
         [Parameter(Mandatory=$false)]
-        [bool] $AzureForGov = $false
+        [bool] $AzureForGov = $false,
+        [Parameter(Mandatory=$false)]
+        [bool] $ConnectToAzureAd = $false
     )
 
     try 
@@ -45,7 +47,6 @@ function AzureLogin
                 if(!(Test-Path -Path $SecurePasswordLocation)){return Write-Host "Path doesn't exist: $($SecurePasswordLocation)"; $false}
             } 
         }
-
         try 
         {
             $password = Get-Content $SecurePasswordLocation | ConvertTo-SecureString
@@ -57,19 +58,30 @@ function AzureLogin
         {
             if($success)
             {
-                if($AzureForGov){Connect-AzAccount -Credential $cred -EnvironmentName AzureUSGovernment | Out-Null}
-                else{Connect-AzAccount -Credential $cred | Out-Null}
-                $context = Get-AzContext
-                if($context.Subscription.Name){$success = $true}
-                else{$success = $false}
-                
+                #connect AD or Az
+                if($ConnectToAzureAd)
+                {
+                    if($AzureForGov){Connect-AzureAD -Credential $cred -EnvironmentName AzureUSGovernment | Out-Null}
+                    else{Connect-AzureAD -Credential $cred | Out-Null}
+                    $context = Get-AzureADUser -Top 1
+                    if($context){$success = $true}   
+                    else{$success = $false}
+                }
+                else 
+                {
+                    if($AzureForGov){Connect-AzAccount -Credential $cred -EnvironmentName AzureUSGovernment | Out-Null}
+                    else{Connect-AzAccount -Credential $cred | Out-Null}
+                    $context = Get-AzContext
+                    if($context.Subscription.Name){$success = $true}
+                    else{$success = $false}
+                }
                 if(!($success))
                 {
                   # error logging into account or user doesn't have subscription rights, exit
                   $success = $false
                   throw "Failed to login, exiting..."
                   #exit
-                }
+                }   
             }
         }
         catch{$success = $false} 
@@ -112,24 +124,29 @@ function Write-Logging()
 [bool]      $RunPasswordPrompt =           $true   #Uses Read-Host to prompt the user at the command prompt to enter password.  this will create the text file in $SecurePasswordLocation.
 [bool]      $AzureForGovernment =          $false    #set to $true if running cmdlets against Microsoft azure for government
 [bool]      $EnableLogFile =               $false    # If enabled a log file will be written to $LogFileNameAndPath.
+[bool]      $ConnectToAzureAd =            $false      # This will connect using Connect-AzureAd instead of Connect-AzAccount
 
 try 
 {
     if($EnableLogFile){Write-Logging -Message "Starting script" -LogFileNameAndPath $LogFileNameAndPath | Out-Null}
-    if($AzureForGovernment){$success = AzureLogin -RunPasswordPrompt $RunPasswordPrompt -SecurePasswordLocation $SecurePasswordLocation -LoginName $LoginName -AzureForGov $AzureForGovernment}
-    else {$success = AzureLogin -RunPasswordPrompt $RunPasswordPrompt -SecurePasswordLocation $SecurePasswordLocation -LoginName $LoginName}
+    $success = AzureLogin -RunPasswordPrompt $RunPasswordPrompt -SecurePasswordLocation $SecurePasswordLocation -LoginName $LoginName -AzureForGov $AzureForGovernment -ConnectToAzureAd $ConnectToAzureAd
+    #if($AzureForGovernment){$success = AzureLogin -RunPasswordPrompt $RunPasswordPrompt -SecurePasswordLocation $SecurePasswordLocation -LoginName $LoginName -AzureForGov $AzureForGovernment -ConnectToAzureAd $ConnectToAzureAd}
+    #else {$success = AzureLogin -RunPasswordPrompt $RunPasswordPrompt -SecurePasswordLocation $SecurePasswordLocation -LoginName $LoginName}
 
     if($success)
     {
         if($EnableLogFile){Write-Logging -Message "Login Succeeded" -LogFileNameAndPath $LogFileNameAndPath | Out-Null}
         #Login Successful
         Write-Host "Login Succeeded"
-        #Add your Azure cmdlets here ###########################################
-        #Get-AzSubscription 
-        Get-AzVM
-        #Get-AzResourceGroup
-
-
+ 
+        if($ConnectToAzureAd)
+        {
+            #run commands from AzureAd for example Get-AzureAdUser###########################
+        }
+        else 
+        {
+            #run commands against Azure, such as Get-AzVm####################################
+        }
     }
     else 
     {
@@ -137,7 +154,6 @@ try
         Write-Host "Login Failed or No Access"
         if($EnableLogFile){Write-Logging -Message "Login Failed or No Access" -LogFileNameAndPath $LogFileNameAndPath | Out-Null}
     }
-
 }
 catch 
 {
