@@ -52,40 +52,29 @@ function AzureLogin
             $cred = new-object -typename System.Management.Automation.PSCredential -argumentlist $LoginName, $password 
             $success = $true
         }
-        catch 
-        {
-            $success = $false
-        }
-
-
+        catch {$success = $false}
         try 
         {
             if($success)
             {
                 if($AzureForGov){Connect-AzAccount -Credential $cred -EnvironmentName AzureUSGovernment | Out-Null}
                 else{Connect-AzAccount -Credential $cred | Out-Null}
-                $DoesUserHaveAccess = Get-AzSubscription 
-                if(!($DoesUserHaveAccess))
+                $context = Get-AzContext
+                if($context.Subscription.Name){$success = $true}
+                else{$success = $false}
+                
+                if(!($success))
                 {
-                    # error logging into account or user doesn't have subscription rights, exit
-                    $success = $false
-                    throw "Failed to login, exiting..."
-                    #exit
+                  # error logging into account or user doesn't have subscription rights, exit
+                  $success = $false
+                  throw "Failed to login, exiting..."
+                  #exit
                 }
-                else{$success = $true}  
             }
         }
-        catch 
-        {
-            #$_.Exception.Message
-            $success = $false 
-        } 
+        catch{$success = $false} 
     }
-    catch 
-    {
-        $_.Exception.Message | Out-Null
-        $success = $false    
-    }
+    catch {$success = $false}
     return $success
 }
 
@@ -119,10 +108,10 @@ function Write-Logging()
 #Variables - Add your values for the variables here, you can't leave the values blank
 [string]    $LoginName =                   ""       #Azure username, something@something.onmicrosoft.com 
 [string]    $SecurePasswordLocation =      ""       #Path and filename for the secure password file c:\Whatever\securePassword.txt
-[bool]      $RunPasswordPrompt =           $false   #Uses Read-Host to prompt the user at the command prompt to enter password.  this will create the text file in $SecurePasswordLocation.
-[bool]      $AzureForGovernment =          $true    #set to $true if running cmdlets against Microsoft azure for government
-[string]    $LogFileNameAndPath =           ""      # If $enabledLogFile is true, the script will write to a log file in this path.  Include FileName, example c:\whatever\file.log
-[bool]      $EnableLogFile =               $true    # If enabled a log file will be written to $LogFileNameAndPath.
+[string]    $LogFileNameAndPath =          ""      # If $enabledLogFile is true, the script will write to a log file in this path.  Include FileName, example c:\whatever\file.log
+[bool]      $RunPasswordPrompt =           $true   #Uses Read-Host to prompt the user at the command prompt to enter password.  this will create the text file in $SecurePasswordLocation.
+[bool]      $AzureForGovernment =          $false    #set to $true if running cmdlets against Microsoft azure for government
+[bool]      $EnableLogFile =               $false    # If enabled a log file will be written to $LogFileNameAndPath.
 
 try 
 {
@@ -136,7 +125,9 @@ try
         #Login Successful
         Write-Host "Login Succeeded"
         #Add your Azure cmdlets here ###########################################
-        #Get-AzVM
+        #Get-AzSubscription 
+        Get-AzVM
+        #Get-AzResourceGroup
 
 
     }
