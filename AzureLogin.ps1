@@ -118,13 +118,13 @@ function Write-Logging()
 
 ####Begin Code - enter your code in the if statement below
 #Variables - Add your values for the variables here, you can't leave the values blank
-[string]    $LoginName =                   ""       #Azure username, something@something.onmicrosoft.com 
-[string]    $SecurePasswordLocation =      ""       #Path and filename for the secure password file c:\Whatever\securePassword.txt
-[string]    $LogFileNameAndPath =          ""      # If $enabledLogFile is true, the script will write to a log file in this path.  Include FileName, example c:\whatever\file.log
-[bool]      $RunPasswordPrompt =           $true   #Uses Read-Host to prompt the user at the command prompt to enter password.  this will create the text file in $SecurePasswordLocation.
-[bool]      $AzureForGovernment =          $false    #set to $true if running cmdlets against Microsoft azure for government
-[bool]      $EnableLogFile =               $false    # If enabled a log file will be written to $LogFileNameAndPath.
-[bool]      $ConnectToAzureAd =            $false      # This will connect using Connect-AzureAd instead of Connect-AzAccount
+[string]    $LoginName =                   ""           #Azure username, something@something.onmicrosoft.com 
+[string]    $SecurePasswordLocation =      ""           #Path and filename for the secure password file c:\Whatever\securePassword.txt
+[string]    $LogFileNameAndPath =          ""           #If $enabledLogFile is true, the script will write to a log file in this path.  Include FileName, example c:\whatever\file.log
+[bool]      $RunPasswordPrompt =           $true        #Uses Read-Host to prompt the user at the command prompt to enter password.  this will create the text file in $SecurePasswordLocation.
+[bool]      $AzureForGovernment =          $false       #set to $true if running cmdlets against Microsoft azure for government
+[bool]      $EnableLogFile =               $false       #If enabled a log file will be written to $LogFileNameAndPath.
+[bool]      $ConnectToAzureAd =            $false       #This will connect using Connect-AzureAd instead of Connect-AzAccount
 
 try 
 {
